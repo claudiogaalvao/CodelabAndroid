@@ -32,9 +32,14 @@ class MyFragment: Fragment()  {
 
     private lateinit var adapter: MyAdapter
 
+    private val onItemClicked: (itemModel: ItemModel) -> Unit = { itemModel ->
+        // do something here when the item is clicked, like redirect to another activity
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        adapter = MyAdapter(onItemClicked)
         // set the adapter to your recycler view
         // observe changes of your state flow
         lifecycleScope.launchWhenCreated {
@@ -83,15 +88,13 @@ data class ItemModel(
 )
 
 
-abstract class MyAdapter: ListAdapter<ItemModel, MyAdapter.MyViewHolder>(DIFF_CALLBACK) {
+class MyAdapter(
+    private val onItemClicked: (item: ItemModel) -> Unit
+): ListAdapter<ItemModel, MyAdapter.MyViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
-        val binding = FragmentFirstBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
-        return MyViewHolder(binding)
+        val binding = FragmentFirstBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return MyViewHolder(binding, onItemClicked)
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
@@ -99,11 +102,16 @@ abstract class MyAdapter: ListAdapter<ItemModel, MyAdapter.MyViewHolder>(DIFF_CA
     }
 
     class MyViewHolder(
-        private val binding: FragmentFirstBinding
+        private val binding: FragmentFirstBinding,
+        private val onItemClicked: (item: ItemModel) -> Unit
     ): RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: ItemModel) {
             // Here you can get the item values to put this values on your view
+            // Here you set the callback to a listener
+            binding.root.setOnClickListener {
+                onItemClicked.invoke(item)
+            }
         }
 
     }
